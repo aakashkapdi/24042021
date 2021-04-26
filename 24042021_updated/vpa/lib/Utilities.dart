@@ -197,7 +197,9 @@ class _UtilitiesState extends State<Utilities> {
                       onPressed: () {
                         tts.tellPress("Object Detection");
                       },
-                      onLongPress: () {},
+                      onLongPress: () {
+                        Navigator.pushNamed(context, '/objectDetection');
+                      },
                       style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),
@@ -223,7 +225,9 @@ class _UtilitiesState extends State<Utilities> {
                       onPressed: () {
                         tts.tellPress("Read Text");
                       },
-                      onLongPress: () {},
+                      onLongPress: () {
+                        Navigator.pushNamed(context, '/readText');
+                      },
                       style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),

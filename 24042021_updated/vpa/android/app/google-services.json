@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "253506371384",
+    "project_id": "vpa-april2020",
+    "storage_bucket": "vpa-april2020.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:253506371384:android:cbaa41a65ca11acb3f8bcd",
+        "android_client_info": {
+          "package_name": "com.aitd.vpa"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "253506371384-t0rqcidqh555bkm79badjqrmvb5n5s79.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBTcfTBqLtaUkrT1fH-_T2os1ksZ72y0tA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "253506371384-t0rqcidqh555bkm79badjqrmvb5n5s79.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
