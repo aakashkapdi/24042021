@@ -30,6 +30,13 @@ dependencies:
   cupertino_icons: ^1.0.2
   flutter_tts: ^3.0.0
   connectivity: ^3.0.3
+  speech_to_text: ^3.2.0
+  path_provider: ^2.0.1
+  contact_picker: ^0.0.2
+  geolocator: ^6.1.7
+  sms: ^0.2.4
+
+
 
 dev_dependencies:
   flutter_test:

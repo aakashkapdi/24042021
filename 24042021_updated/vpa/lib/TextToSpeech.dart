@@ -9,12 +9,20 @@ class TextToSpeech {
     tts.setSpeechRate(1.0);
   }
 
+  void tell(String string) {
+    tts.speak(string);
+  }
+
   void tellCurrentScreen(String screen) {
     tts.speak("You are on " + screen + "Screen");
   }
 
   void tellPress(String button) {
     tts.speak(button);
+  }
+
+  void goingBack(String screen) {
+    tts.speak("going back to " + screen + " Screen");
   }
 
   String _getDate() {

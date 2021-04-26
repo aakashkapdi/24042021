@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:vpa/SaveContacts.dart';
+import 'package:path_provider/path_provider.dart';
 import 'Size_Config.dart';
 import 'TextToSpeech.dart';
+import 'dart:io' as io;
 
 class Initialisation extends StatefulWidget {
   @override
@@ -10,51 +13,38 @@ class Initialisation extends StatefulWidget {
 }
 
 class _InitialisationState extends State<Initialisation> {
-  String selectedPage;
-
-  void _handlePageTapped(String page) {
-    setState(() {
-      selectedPage = page;
-    });
-    print(page);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    SizeConfig().init(context);
-    SystemChrome.setPreferredOrientations(
-        [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
-    return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: "Home Page",
-        home: Navigator(
-          pages: [
-            if (selectedPage == null)
-              MaterialPage(
-                  child: InitialisationPage(
-                onTap: _handlePageTapped,
-              )),
-            if (selectedPage != null)
-              if (selectedPage == "SaveContacts")
-                MaterialPage(
-                    child: SaveContacts()) //TODO:- add more routes for pages
-          ],
-          onPopPage: (route, result) {
-            if (!route.didPop(result)) return false;
-            setState(() {
-              selectedPage = null;
-            });
-            return true;
-          },
-        ));
-  }
-}
-
-class InitialisationPage extends StatelessWidget {
   final tts = TextToSpeech();
-  final ValueChanged<String> onTap;
+  int resetCount = 0;
+  io.File jsonFileSos;
 
-  InitialisationPage({Key key, this.onTap}) : super(key: key);
+  void resetSosFile() async {
+    io.Directory tempDir = await getApplicationDocumentsDirectory();
+    String _sosPath = tempDir.path + '/sos.json';
+    jsonFileSos = new io.File(_sosPath);
+    Map<String, dynamic> message = {"Message": ""};
+    Map<String, dynamic> count = {"Count": "0"};
+    Map<String, dynamic> emptyForSos = {};
+    emptyForSos.addAll(message);
+    emptyForSos.addAll(count);
+    jsonFileSos.writeAsStringSync(json.encode(emptyForSos));
+    print("sos file created");
+  }
+
+  void resetAllFiles() {
+    resetSosFile(); //TODO Add remaining file to reset
+  }
+
+  void incrementReset() {
+    resetCount++;
+    Future.delayed(Duration(seconds: 5), () {
+      resetCount = 0;
+    });
+    if (resetCount == 6) {
+      tts.tell("Resetting All Files to Default");
+      resetAllFiles();
+      resetCount = 0;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +62,8 @@ class InitialisationPage extends StatelessWidget {
                 leading: IconButton(
                     icon: Icon(Icons.arrow_back_rounded, color: Colors.white),
                     onPressed: () {
-                      Navigator.of(context).pop();
+                      tts.goingBack("Home");
+                      Navigator.pop(context);
                     })),
             body: GestureDetector(
                 behavior: HitTestBehavior.opaque,
@@ -96,7 +87,7 @@ class InitialisationPage extends StatelessWidget {
                         tts.tellPress("Save Contacts");
                       },
                       onLongPress: () {
-                        onTap("SaveContacts");
+                        Navigator.pushNamed(context, '/saveContacts');
                       },
                       style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
@@ -123,7 +114,9 @@ class InitialisationPage extends StatelessWidget {
                       onPressed: () {
                         tts.tellPress("Save SOS Message");
                       },
-                      onLongPress: () {},
+                      onLongPress: () {
+                        Navigator.pushNamed(context, '/saveMessage');
+                      },
                       style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),
@@ -149,7 +142,9 @@ class InitialisationPage extends StatelessWidget {
                       onPressed: () {
                         tts.tellPress("Save Faces");
                       },
-                      onLongPress: () {},
+                      onLongPress: () {
+                        Navigator.pushNamed(context, '/saveFaces');
+                      },
                       style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),
@@ -173,9 +168,11 @@ class InitialisationPage extends StatelessWidget {
                     width: SizeConfig.safeBlockHorizontal * 100,
                     child: ElevatedButton(
                       onPressed: () {
-                        tts.tellPress("Reset Settings to Default");
+                        if (resetCount == 0)
+                          tts.tell(
+                              "Press this button 5 times to Reset Settings to Default");
+                        incrementReset();
                       },
-                      onLongPress: () {},
                       style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),

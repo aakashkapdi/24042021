@@ -1,10 +1,13 @@
+import 'dart:convert';
+import 'package:geolocator/geolocator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:vpa/Initialisation.dart';
-import 'package:vpa/Mute.dart';
-import 'package:vpa/Utilities.dart';
 import 'Size_Config.dart';
 import 'TextToSpeech.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io' as io;
+import 'package:connectivity/connectivity.dart';
+import 'package:sms/sms.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -12,59 +15,91 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  String selectedPage;
+  final tts = TextToSpeech();
+  io.File jsonFileSos;
+  Map<String, dynamic> emptyForSos = {};
+  bool internet = false;
 
-  void _handlePageTapped(String page) {
-    setState(() {
-      selectedPage = page;
-    });
-    print(page);
+  void checkInternet() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.mobile ||
+        connectivityResult == ConnectivityResult.wifi)
+      internet = true;
+    else
+      internet = false;
+  }
+
+  Future<String> prepareMessage() async {
+    Map<String, dynamic> data = json.decode(jsonFileSos.readAsStringSync());
+    String message;
+    checkInternet();
+    if (data["Message"].toString().isEmpty) {
+      message = "Emergency! I need Help.";
+    } else
+      message = data["Message"].toString();
+    if (internet) {
+      Position pos = await GeolocatorPlatform.instance.getCurrentPosition();
+      message = message +
+          "...My current location is http://maps.google.com/maps?q=" +
+          pos.latitude.toString() +
+          "," +
+          pos.longitude.toString();
+    }
+    return message;
+  }
+
+  void sendSos() async {
+    Map<String, dynamic> data = json.decode(jsonFileSos.readAsStringSync());
+    if (int.parse(data['Count']) == 0)
+      tts.tell("No Contacts Saved Exiting S O S");
+    else {
+      String message = await prepareMessage();
+      print(message);
+      List numbers = [];
+      data.forEach((key, value) {
+        if (key.contains("Number")) numbers.add(value);
+        SmsSender sender = new SmsSender();
+        numbers.forEach((number) async {
+          String address = "+91" + number.toString();
+          SmsMessage result =
+              await sender.sendSms(SmsMessage(address, message));
+          result.onStateChanged.listen((state) {
+            if (state == SmsMessageState.Fail)
+              tts.tell("S O S Message Failed due to no network");
+            else if (state == SmsMessageState.Sending)
+              tts.tell("Sending S O S Message ");
+            else if (state == SmsMessageState.Sent)
+              tts.tell("S O S Message Sent");
+          });
+        });
+      });
+    }
+  }
+
+  void checkFileSOS() async {
+    io.Directory tempDir = await getApplicationDocumentsDirectory();
+    String _sosPath = tempDir.path + '/sos.json';
+    if (await io.File(_sosPath).exists()) {
+      print("SOS File Exists");
+      jsonFileSos = io.File(_sosPath);
+    } else {
+      jsonFileSos = new io.File(_sosPath);
+      Map<String, dynamic> message = {"Message": ""};
+      Map<String, dynamic> count = {"Count": "0"};
+      emptyForSos.addAll(message);
+      emptyForSos.addAll(count);
+      jsonFileSos.writeAsStringSync(json.encode(emptyForSos));
+      print("sos file created");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    checkFileSOS();
+    tts.tellCurrentScreen("home");
     SizeConfig().init(context);
     SystemChrome.setPreferredOrientations(
         [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
-    return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: "Home Page",
-        home: Navigator(
-          pages: [
-            if (selectedPage == null)
-              MaterialPage(
-                  child: HomeView(
-                onTap: _handlePageTapped,
-              )),
-            if (selectedPage != null)
-              if (selectedPage == "Initialisation")
-                MaterialPage(child: Initialisation())
-              else if (selectedPage == "Utilities")
-                MaterialPage(child: Utilities())
-              else if (selectedPage == "Mute")
-                MaterialPage(child: Mute()) //TODO:- add more routes for pages
-          ],
-          onPopPage: (route, result) {
-            if (!route.didPop(result)) return false;
-            setState(() {
-              selectedPage = null;
-            });
-            return true;
-          },
-        ));
-  }
-}
-
-class HomeView extends StatelessWidget {
-  final tts = TextToSpeech();
-
-  final ValueChanged<String> onTap;
-
-  HomeView({Key key, this.onTap}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    tts.tellCurrentScreen("home");
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
@@ -98,7 +133,9 @@ class HomeView extends StatelessWidget {
                           onPressed: () {
                             tts.tellPress("Send S O S");
                           },
-                          onLongPress: () {},
+                          onLongPress: () {
+                            sendSos();
+                          },
                           style: ElevatedButton.styleFrom(
                               primary: Color(0xFF266EC0)),
                           child: Text(
@@ -123,7 +160,7 @@ class HomeView extends StatelessWidget {
                             tts.tellPress("MUTE AUDIO");
                           },
                           onLongPress: () {
-                            onTap("Mute");
+                            Navigator.pushNamed(context, '/mute');
                           },
                           style: ElevatedButton.styleFrom(
                               primary: Color(0xFF00B1D2)),
@@ -158,7 +195,7 @@ class HomeView extends StatelessWidget {
                             tts.tellPress("UTILITIES");
                           },
                           onLongPress: () {
-                            onTap("Utilities");
+                            Navigator.pushNamed(context, '/utilities');
                           },
                           style: ElevatedButton.styleFrom(
                               primary: Color(0xFF00B1D2)),
@@ -184,7 +221,7 @@ class HomeView extends StatelessWidget {
                             tts.tellPress("INITIALISATION");
                           },
                           onLongPress: () {
-                            onTap("Initialisation");
+                            Navigator.pushNamed(context, '/initialisation');
                           },
                           style: ElevatedButton.styleFrom(
                               primary: Color(0xFF266EC0)),

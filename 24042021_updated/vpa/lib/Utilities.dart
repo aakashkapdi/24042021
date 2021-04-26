@@ -26,7 +26,8 @@ class _UtilitiesState extends State<Utilities> {
                 leading: IconButton(
                     icon: Icon(Icons.arrow_back_rounded, color: Colors.white),
                     onPressed: () {
-                      Navigator.of(context).pop();
+                      tts.goingBack("Home");
+                      Navigator.pop(context);
                     })),
             body: GestureDetector(
                 behavior: HitTestBehavior.opaque,
