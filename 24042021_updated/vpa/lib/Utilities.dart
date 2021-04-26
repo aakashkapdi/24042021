@@ -5,6 +5,7 @@ import 'Size_Config.dart';
 import 'TextToSpeech.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:android_intent/android_intent.dart';
+import 'package:flutter_appavailability/flutter_appavailability.dart';
 
 class Utilities extends StatefulWidget {
   @override
@@ -32,6 +33,15 @@ class _UtilitiesState extends State<Utilities> {
         data: Uri.encodeFull('google.navigation:q=' + destination),
         package: 'com.google.android.apps.maps');
     intent.launch();
+  }
+
+  void launchRbiMani() {
+    try {
+      AppAvailability.launchApp('com.rbi.mani');
+    } catch (e) {
+      tts.tell(
+          'Error opening R B I mani app. ensure that you have R B I mani app installed on the phone');
+    }
   }
 
   void resultListener(result) {
@@ -133,7 +143,9 @@ class _UtilitiesState extends State<Utilities> {
                       onPressed: () {
                         tts.tellPress("Currency detection");
                       },
-                      onLongPress: () {},
+                      onLongPress: () {
+                        launchRbiMani();
+                      },
                       style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),
