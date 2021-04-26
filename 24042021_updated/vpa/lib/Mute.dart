@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'Size_Config.dart';
 import 'TextToSpeech.dart';
+import 'dart:io' as io;
 
 class Mute extends StatefulWidget {
   @override
@@ -10,8 +14,39 @@ class Mute extends StatefulWidget {
 
 class _MuteState extends State<Mute> {
   final tts = TextToSpeech();
+  io.File jsonFileMute;
+
+  void readMuteFile() async {
+    try {
+      io.Directory tempDir = await getApplicationDocumentsDirectory();
+      String _mutePath = tempDir.path + '/mute.json';
+      jsonFileMute = io.File(_mutePath);
+      Map<String, dynamic> data = json.decode(jsonFileMute.readAsStringSync());
+      print("before:");
+      print(data);
+    } catch (e) {
+      print("File Exception" + e.toString());
+    }
+  }
+
+  void updateMuteFile(String key, String value) {
+    Map<String, dynamic> data = json.decode(jsonFileMute.readAsStringSync());
+    data[key] = value;
+    jsonFileMute.writeAsStringSync(json.encode(data));
+  }
+
+  void unmuteAll() {
+    Map<String, dynamic> data = json.decode(jsonFileMute.readAsStringSync());
+    data['Obstacle'] = 'Unmute';
+    data['Elevated'] = 'Unmute';
+    data['Lowered'] = 'Unmute';
+    data['Wet'] = 'Unmute';
+    jsonFileMute.writeAsStringSync(json.encode(data));
+  }
+
   @override
   Widget build(BuildContext context) {
+    readMuteFile();
     SizeConfig().init(context);
     SystemChrome.setPreferredOrientations(
         [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
@@ -50,7 +85,10 @@ class _MuteState extends State<Mute> {
                       onPressed: () {
                         tts.tellPress("Mute Obstacle Detection");
                       },
-                      onLongPress: () {},
+                      onLongPress: () {
+                        tts.tell("Muting Obstacle Detection");
+                        updateMuteFile("Obstacle", "Mute");
+                      },
                       style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),
@@ -77,7 +115,10 @@ class _MuteState extends State<Mute> {
                       onPressed: () {
                         tts.tellPress("Mute elevated surface");
                       },
-                      onLongPress: () {},
+                      onLongPress: () {
+                        tts.tell("Muting Elevated Surface Detection");
+                        updateMuteFile("Elevated", "Mute");
+                      },
                       style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),
@@ -104,7 +145,10 @@ class _MuteState extends State<Mute> {
                       onPressed: () {
                         tts.tellPress("Mute lowered surface detection");
                       },
-                      onLongPress: () {},
+                      onLongPress: () {
+                        tts.tell("Muting Lowered Surface Detection");
+                        updateMuteFile("Lowered", "Mute");
+                      },
                       style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),
@@ -131,7 +175,10 @@ class _MuteState extends State<Mute> {
                       onPressed: () {
                         tts.tellPress("mute wet surface detection");
                       },
-                      onLongPress: () {},
+                      onLongPress: () {
+                        tts.tell("Muting wet Surface Detection");
+                        updateMuteFile("Wet", "Mute");
+                      },
                       style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),
@@ -158,7 +205,10 @@ class _MuteState extends State<Mute> {
                       onPressed: () {
                         tts.tellPress("umnute all voice outputs");
                       },
-                      onLongPress: () {},
+                      onLongPress: () {
+                        tts.tell("Unmuting all Voice Outputs");
+                        unmuteAll();
+                      },
                       style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),

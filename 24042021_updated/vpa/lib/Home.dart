@@ -16,8 +16,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final tts = TextToSpeech();
-  io.File jsonFileSos;
-  Map<String, dynamic> emptyForSos = {};
+  io.File jsonFileSos, jsonFileMute;
   bool internet = false;
 
   void checkInternet() async {
@@ -80,22 +79,46 @@ class _HomeState extends State<Home> {
     io.Directory tempDir = await getApplicationDocumentsDirectory();
     String _sosPath = tempDir.path + '/sos.json';
     if (await io.File(_sosPath).exists()) {
-      print("SOS File Exists");
       jsonFileSos = io.File(_sosPath);
     } else {
       jsonFileSos = new io.File(_sosPath);
       Map<String, dynamic> message = {"Message": ""};
       Map<String, dynamic> count = {"Count": "0"};
+      Map<String, dynamic> emptyForSos = {};
       emptyForSos.addAll(message);
       emptyForSos.addAll(count);
       jsonFileSos.writeAsStringSync(json.encode(emptyForSos));
-      print("sos file created");
+    }
+  }
+
+  void checkFileMute() async {
+    io.Directory tempDir = await getApplicationDocumentsDirectory();
+    String _mutePath = tempDir.path + '/mute.json';
+    if (await io.File(_mutePath).exists()) {
+      print("Mute File Exists");
+      jsonFileMute = io.File(_mutePath);
+    } else {
+      jsonFileMute = new io.File(_mutePath);
+      Map<String, dynamic> obstacle = {"Obstacle": "Unmute"};
+      Map<String, dynamic> elevated = {"Elevated": "Unmute"};
+      Map<String, dynamic> lowered = {"Lowered": "Unmute"};
+      Map<String, dynamic> wet = {"Wet": "Unmute"};
+      Map<String, dynamic> emptyForMute = {};
+
+      emptyForMute.addAll(obstacle);
+      emptyForMute.addAll(elevated);
+      emptyForMute.addAll(lowered);
+      emptyForMute.addAll(wet);
+
+      jsonFileMute.writeAsStringSync(json.encode(emptyForMute));
+      print("Mute file created");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     checkFileSOS();
+    checkFileMute();
     tts.tellCurrentScreen("home");
     SizeConfig().init(context);
     SystemChrome.setPreferredOrientations(

@@ -15,12 +15,17 @@ class Initialisation extends StatefulWidget {
 class _InitialisationState extends State<Initialisation> {
   final tts = TextToSpeech();
   int resetCount = 0;
-  io.File jsonFileSos;
+  io.File jsonFileSos, jsonFileMute;
 
   void resetSosFile() async {
-    io.Directory tempDir = await getApplicationDocumentsDirectory();
-    String _sosPath = tempDir.path + '/sos.json';
-    jsonFileSos = new io.File(_sosPath);
+    try {
+      io.Directory tempDir = await getApplicationDocumentsDirectory();
+      String _sosPath = tempDir.path + '/sos.json';
+      jsonFileSos = new io.File(_sosPath);
+    } catch (e) {
+      print(e.toString());
+    }
+
     Map<String, dynamic> message = {"Message": ""};
     Map<String, dynamic> count = {"Count": "0"};
     Map<String, dynamic> emptyForSos = {};
@@ -30,8 +35,32 @@ class _InitialisationState extends State<Initialisation> {
     print("sos file created");
   }
 
+  void resetMuteFile() async {
+    try {
+      io.Directory tempDir = await getApplicationDocumentsDirectory();
+      String _mutePath = tempDir.path + '/mute.json';
+      jsonFileMute = io.File(_mutePath);
+      Map<String, dynamic> data = json.decode(jsonFileMute.readAsStringSync());
+    } catch (e) {
+      print("File Exception" + e.toString());
+    }
+    Map<String, dynamic> obstacle = {"Obstacle": "Unmute"};
+    Map<String, dynamic> elevated = {"Elevated": "Unmute"};
+    Map<String, dynamic> lowered = {"Lowered": "Unmute"};
+    Map<String, dynamic> wet = {"Wet": "Unmute"};
+    Map<String, dynamic> emptyForMute = {};
+
+    emptyForMute.addAll(obstacle);
+    emptyForMute.addAll(elevated);
+    emptyForMute.addAll(lowered);
+    emptyForMute.addAll(wet);
+
+    jsonFileMute.writeAsStringSync(json.encode(emptyForMute));
+  }
+
   void resetAllFiles() {
-    resetSosFile(); //TODO Add remaining file to reset
+    resetSosFile();
+    resetMuteFile(); //TODO Add remaining file to reset
   }
 
   void incrementReset() {
