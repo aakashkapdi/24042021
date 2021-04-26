@@ -40,7 +40,6 @@ class _InitialisationState extends State<Initialisation> {
       io.Directory tempDir = await getApplicationDocumentsDirectory();
       String _mutePath = tempDir.path + '/mute.json';
       jsonFileMute = io.File(_mutePath);
-      Map<String, dynamic> data = json.decode(jsonFileMute.readAsStringSync());
     } catch (e) {
       print("File Exception" + e.toString());
     }

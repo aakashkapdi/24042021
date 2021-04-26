@@ -1,7 +1,10 @@
+import 'package:connectivity/connectivity.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'Size_Config.dart';
 import 'TextToSpeech.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:android_intent/android_intent.dart';
 
 class Utilities extends StatefulWidget {
   @override
@@ -10,8 +13,60 @@ class Utilities extends StatefulWidget {
 
 class _UtilitiesState extends State<Utilities> {
   final tts = TextToSpeech();
+  stt.SpeechToText speech = new stt.SpeechToText();
+
+  bool internet = false;
+
+  void checkInternet() async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.mobile ||
+        connectivityResult == ConnectivityResult.wifi)
+      internet = true;
+    else
+      internet = false;
+  }
+
+  void launchNavigation(String destination) {
+    final AndroidIntent intent = AndroidIntent(
+        action: 'action_view',
+        data: Uri.encodeFull('google.navigation:q=' + destination),
+        package: 'com.google.android.apps.maps');
+    intent.launch();
+  }
+
+  void resultListener(result) {
+    speech.initialize();
+    if (result.finalResult) {
+      String temp = '${result.recognizedWords}';
+      tts.tell("the entered Destination is " + temp);
+      launchNavigation(temp);
+    }
+  }
+
+  void recordInputDestination() async {
+    bool available = await speech.initialize();
+    if (available) {
+      tts.tell("Give Voice input for the Destination");
+      Future.delayed(Duration(seconds: 2), () {
+        speech.listen(onResult: resultListener);
+      });
+    } else {
+      tts.tell("The user has denied the use of speech recognition.");
+    }
+  }
+
+  void navigation() {
+    if (!internet)
+      tts.tell(
+          "You dont have an active internet connection, exiting Navigation");
+    else {
+      recordInputDestination();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    checkInternet();
     SizeConfig().init(context);
     SystemChrome.setPreferredOrientations(
         [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
@@ -50,7 +105,9 @@ class _UtilitiesState extends State<Utilities> {
                       onPressed: () {
                         tts.tellPress("Navigation");
                       },
-                      onLongPress: () {},
+                      onLongPress: () {
+                        navigation();
+                      },
                       style: ElevatedButton.styleFrom(
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),

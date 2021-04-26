@@ -35,6 +35,8 @@ dependencies:
   contact_picker: ^0.0.2
   geolocator: ^6.1.7
   sms: ^0.2.4
+  android_intent: ^2.0.0
+
 
 
 
